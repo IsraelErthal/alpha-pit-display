@@ -1,0 +1,29 @@
+{
+  "name": "alphaback",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:validate": "prisma validate",
+    "admin:grant": "node scripts/grant-admin.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@prisma/client": "^7.9.1",
+    "@prisma/adapter-mariadb": "^7.9.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.2.1",
+    "firebase-admin": "^13.6.0",
+    "helmet": "^8.1.0",
+    "prisma": "^7.9.1",
+    "socket.io": "^4.8.1",
+    "zod": "^3.24.2"
+  }
+}

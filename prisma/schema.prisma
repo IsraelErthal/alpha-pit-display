@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum Role {
+  VISITANTE
+  ADMIN
+}
+
+model Usuario {
+  id            String       @id
+  nome          String
+  email         String       @unique
+  foto_url      String?
+  role          Role         @default(VISITANTE)
+  data_cadastro DateTime     @default(now())
+  
+  comentarios   Comentario[]
+
+  @@map("usuarios")
+}
+
+model Comentario {
+  id         Int      @id @default(autoincrement())
+  mensagem   String   @db.Text
+  status     String   @default("pendente")
+  criado_em  DateTime @default(now())
+  ocultado_em DateTime?
+  
+  usuario_id String
+  usuario    Usuario  @relation(fields: [usuario_id], references: [id])
+
+  @@map("comentarios")
+  @@index([status, criado_em])
+}
+
+model AcessoLog {
+  id               Int      @id @default(autoincrement())
+  data_hora_acesso DateTime @default(now())
+  sessao_id        String   @db.VarChar(64)
+
+  @@map("acessos_log")
+  @@index([data_hora_acesso])
+  @@index([sessao_id, data_hora_acesso])
+}

@@ -1,0 +1,6 @@
+/* Keep Alphie clear of the video description. */
+.hero-mascot {
+  width: 150px;
+  right: -5px;
+  bottom: -30px;
+}

@@ -6,33 +6,14 @@ datasource db {
   provider = "mysql"
 }
 
-enum Role {
-  VISITANTE
-  ADMIN
-}
-
-model Usuario {
-  id            String       @id
-  nome          String
-  email         String       @unique
-  foto_url      String?
-  role          Role         @default(VISITANTE)
-  data_cadastro DateTime     @default(now())
-  
-  comentarios   Comentario[]
-
-  @@map("usuarios")
-}
-
 model Comentario {
   id         Int      @id @default(autoincrement())
   mensagem   String   @db.Text
   status     String   @default("pendente")
   criado_em  DateTime @default(now())
   ocultado_em DateTime?
-  
-  usuario_id String
-  usuario    Usuario  @relation(fields: [usuario_id], references: [id])
+  autor      String   @default("Torcedor Alpha")
+  pais       String   @default("BR") @db.VarChar(2)
 
   @@map("comentarios")
   @@index([status, criado_em])

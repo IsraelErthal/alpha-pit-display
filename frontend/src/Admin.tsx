@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { GoogleAuthProvider, User, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
-import { auth } from './firebase';
+import { getAuthClient } from './firebase';
 
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 type Metrics = { acessos: number; usuariosAtivos: number; comentarios: number; comentariosVisiveis: number };
@@ -8,6 +8,7 @@ type Comment = { id: number; mensagem: string; status: string; criado_em: string
 const formatDate = (date: Date) => date.toISOString().slice(0, 10);
 const defaultEnd = formatDate(new Date());
 const defaultStart = formatDate(new Date(Date.now() - 29 * 86_400_000));
+const consentKey = 'alpha-pit-cookie-consent';
 
 export default function Admin() {
   const [user, setUser] = useState<User | null>(null);
@@ -23,8 +24,15 @@ export default function Admin() {
   const [loginError, setLoginError] = useState('');
   const [editing, setEditing] = useState<number | null>(null);
   const [draft, setDraft] = useState('');
+  const [hasConsent, setHasConsent] = useState<boolean | null>(null);
 
   useEffect(() => {
+    setHasConsent(localStorage.getItem(consentKey) === 'accepted');
+  }, []);
+  useEffect(() => {
+    if (hasConsent === null) return;
+    if (!hasConsent) { setAuthChecked(true); return; }
+    const auth = getAuthClient();
     if (!auth) { setAuthChecked(true); return; }
     return onAuthStateChanged(auth, async (u) => {
       if (!u) { setUser(null); setIsAdmin(false); setAuthChecked(true); return; }
@@ -39,13 +47,13 @@ export default function Admin() {
       }
       setUser(u); setIsAdmin(true); setAuthChecked(true);
     });
-  }, []);
+  }, [hasConsent]);
 
   async function authorized(path: string, init: RequestInit = {}) {
     if (!user) throw new Error('Faça login primeiro.');
     const token = await user.getIdToken();
     const response = await fetch(`${apiUrl}${path}`, { ...init, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...(init.headers || {}) } });
-    if (response.status === 401) { await signOut(auth!); throw new Error('Sua sessão expirou. Entre novamente.'); }
+    if (response.status === 401) { const auth = getAuthClient(); if (auth) await signOut(auth); throw new Error('Sua sessão expirou. Entre novamente.'); }
     if (response.status === 403) throw new Error('Sua conta não possui a permissão admin.');
     if (!response.ok) throw new Error('Não foi possível carregar os dados administrativos.');
     return response;
@@ -60,6 +68,8 @@ export default function Admin() {
   useEffect(() => { if (user && isAdmin) void load(); }, [user, isAdmin]);
 
   async function login() {
+    if (!hasConsent) return setLoginError('Aceite os termos e cookies antes de entrar.');
+    const auth = getAuthClient();
     if (!auth) return setLoginError('Firebase não está configurado.');
     setLoginError('');
     try { await signInWithPopup(auth, new GoogleAuthProvider()); }
@@ -70,6 +80,10 @@ export default function Admin() {
 
   if (!authChecked) {
     return <main className="admin-page admin-gate"><p>Verificando sessão…</p></main>;
+  }
+
+  if (!hasConsent) {
+    return <main className="admin-page admin-gate"><a href="/" className="brand">← Alpha Pit Display</a><section className="admin-login-box"><h1>Consentimento necessário.</h1><p>O login só é ativado após o aceite dos termos e cookies.</p><a href="/">Ler termos e aceitar cookies</a></section></main>;
   }
 
   if (!user || !isAdmin) {
@@ -88,13 +102,13 @@ export default function Admin() {
   }
 
   return <main className="admin-page">
-    <header className="admin-header"><a href="/" className="brand">← Alpha Pit Display</a><div><span>{user.email}</span><button onClick={() => signOut(auth!)}>Sair</button></div></header>
+    <header className="admin-header"><a href="/" className="brand">← Alpha Pit Display</a><div><span>{user.email}</span><button onClick={() => { const auth = getAuthClient(); if (auth) void signOut(auth); }}>Sair</button></div></header>
     <section className="admin-content"><div className="admin-intro"><span className="eyebrow">PAINEL ADMINISTRATIVO</span><h1>Visão da torcida.</h1><p>Indicadores baseados nos acessos e comentários registrados pela aplicação.</p></div>
-      <form className="filters" onSubmit={event => { event.preventDefault(); void load(); }}><label>De<input type="date" value={start} onChange={e => setStart(e.target.value)} /></label><label>Até<input type="date" value={end} onChange={e => setEnd(e.target.value)} /></label><label>Status<select value={status} onChange={e => setStatus(e.target.value)}><option value="todos">Todos</option><option value="aprovado">Visíveis</option><option value="oculto">Ocultos</option></select></label><label className="search">Buscar comentário<input value={query} onChange={e => setQuery(e.target.value)} placeholder="Texto ou autor" /></label><button>Aplicar</button></form>
+      <form className="filters" onSubmit={event => { event.preventDefault(); void load(); }}><label>De<input type="date" value={start} onChange={e => setStart(e.target.value)} /></label><label>Até<input type="date" value={end} onChange={e => setEnd(e.target.value)} /></label><label>Status<select value={status} onChange={e => setStatus(e.target.value)}><option value="todos">Todos</option><option value="pendente">Pendentes</option><option value="aprovado">Visíveis</option><option value="oculto">Ocultos</option></select></label><label className="search">Buscar comentário<input value={query} onChange={e => setQuery(e.target.value)} placeholder="Texto ou autor" /></label><button>Aplicar</button></form>
       {notice && <p className="admin-notice">{notice}</p>}
       {metrics && <section className="metric-grid"><Metric label="Acessos" value={metrics.acessos} /><Metric label="Visitantes ativos" value={metrics.usuariosAtivos} /><Metric label="Comentários" value={metrics.comentarios} /><Metric label="Comentários visíveis" value={metrics.comentariosVisiveis} /></section>}
       <section className="comment-admin"><div><span className="eyebrow">MODERAÇÃO</span><h2>Comentários</h2></div>{comments.length === 0 && !notice && <p>Nenhum comentário neste período.</p>}
-        <div className="comment-list">{comments.map(comment => <article className="admin-comment" key={comment.id}><div className="comment-meta"><strong>{comment.autor}</strong><time>{new Date(comment.criado_em).toLocaleString('pt-BR')}</time><b className={comment.status}>{comment.status}</b></div>{editing === comment.id ? <form onSubmit={event => save(event, comment.id)} className="edit-form"><textarea value={draft} maxLength={280} onChange={e => setDraft(e.target.value)} /><small>{draft.length}/280</small><button>Salvar</button><button type="button" onClick={() => setEditing(null)}>Cancelar</button></form> : <p>{comment.mensagem}</p>}<div className="comment-actions"><button onClick={() => { setEditing(comment.id); setDraft(comment.mensagem); }}>Editar</button>{comment.status === 'oculto' ? <button onClick={() => void action(`/api/admin/comments/${comment.id}/restore`, { method: 'PATCH' })}>Restaurar</button> : <button onClick={() => void action(`/api/admin/comments/${comment.id}/hide`, { method: 'PATCH' })}>Ocultar</button>}<button className="danger" onClick={() => { if (window.confirm('Excluir este comentário permanentemente?')) void action(`/api/admin/comments/${comment.id}`, { method: 'DELETE' }); }}>Excluir</button></div></article>)}</div>
+        <div className="comment-list">{comments.map(comment => <article className="admin-comment" key={comment.id}><div className="comment-meta"><strong>{comment.autor}</strong><time>{new Date(comment.criado_em).toLocaleString('pt-BR')}</time><b className={comment.status}>{comment.status}</b></div>{editing === comment.id ? <form onSubmit={event => save(event, comment.id)} className="edit-form"><textarea value={draft} maxLength={280} onChange={e => setDraft(e.target.value)} /><small>{draft.length}/280</small><button>Salvar</button><button type="button" onClick={() => setEditing(null)}>Cancelar</button></form> : <p>{comment.mensagem}</p>}<div className="comment-actions"><button onClick={() => { setEditing(comment.id); setDraft(comment.mensagem); }}>Editar</button>{comment.status === 'oculto' ? <button onClick={() => void action(`/api/admin/comments/${comment.id}/restore`, { method: 'PATCH' })}>Restaurar</button> : comment.status === 'pendente' ? <button onClick={() => void action(`/api/admin/comments/${comment.id}/restore`, { method: 'PATCH' })}>Aprovar</button> : <button onClick={() => void action(`/api/admin/comments/${comment.id}/hide`, { method: 'PATCH' })}>Ocultar</button>}<button className="danger" onClick={() => { if (window.confirm('Excluir este comentário permanentemente?')) void action(`/api/admin/comments/${comment.id}`, { method: 'DELETE' }); }}>Excluir</button></div></article>)}</div>
       </section></section>
   </main>;
 }

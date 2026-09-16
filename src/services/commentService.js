@@ -3,10 +3,10 @@ const { z } = require('zod');
 const messageSchema = z.object({ mensagem: z.string().trim().min(1).max(280) });
 const createSchema = z.object({
   mensagem: z.string().trim().min(1).max(280),
-  autor: z.string().trim().min(1).max(60),
   pais: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/, 'País inválido'),
+  aceitouTermos: z.literal(true),
 });
-const accessSchema = z.object({ sessaoId: z.string().trim().min(12).max(64) });
+const accessSchema = z.object({ sessaoId: z.string().trim().min(12).max(64), aceitouTermos: z.literal(true) });
 
 function publicComment(comment) {
   return { id: comment.id, mensagem: comment.mensagem, criadoEm: comment.criado_em, autor: comment.autor, pais: comment.pais };
@@ -21,6 +21,12 @@ function dateFilter(start, end) {
   return { gte: startAt, lt: endAt };
 }
 
+function verifiedAuthor(user) {
+  const name = user.name?.trim();
+  if (name) return name.slice(0, 60);
+  return user.email.slice(0, 60);
+}
+
 function createCommentService(prisma) {
   return {
     async listPublic() {
@@ -29,9 +35,11 @@ function createCommentService(prisma) {
       });
       return comments.map(publicComment);
     },
-    async create(input) {
-      const { mensagem, autor, pais } = createSchema.parse(input);
-      const comment = await prisma.comentario.create({ data: { mensagem, status: 'aprovado', autor, pais } });
+    async create(input, user) {
+      const { mensagem, pais } = createSchema.parse(input);
+      const comment = await prisma.comentario.create({
+        data: { mensagem, status: 'pendente', autor: verifiedAuthor(user), autor_uid: user.uid, pais, termos_aceitos_em: new Date() },
+      });
       return publicComment(comment);
     },
     async listAdmin(query = '', start, end, status) {
@@ -57,6 +65,11 @@ function createCommentService(prisma) {
     async logAccess(input) {
       const { sessaoId } = accessSchema.parse(input);
       return prisma.acessoLog.create({ data: { sessao_id: sessaoId } });
+    },
+    async removeExpiredAccesses(retentionDays) {
+      const cutoff = new Date();
+      cutoff.setUTCDate(cutoff.getUTCDate() - retentionDays);
+      return prisma.acessoLog.deleteMany({ where: { data_hora_acesso: { lt: cutoff } } });
     },
     async dashboard(start, end) {
       const data_hora_acesso = dateFilter(start, end);

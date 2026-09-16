@@ -23,4 +23,9 @@ function requireAdmin(req, res, next) {
   return res.status(403).json({ error: 'Acesso administrativo necessário.' });
 }
 
-module.exports = { authenticate, requireAdmin };
+function requireVerifiedIdentity(req, res, next) {
+  if (req.user?.email_verified === true) return next();
+  return res.status(403).json({ error: 'Confirme seu e-mail para publicar comentários.' });
+}
+
+module.exports = { authenticate, requireAdmin, requireVerifiedIdentity };

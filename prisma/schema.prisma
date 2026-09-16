@@ -13,10 +13,13 @@ model Comentario {
   criado_em  DateTime @default(now())
   ocultado_em DateTime?
   autor      String   @default("Torcedor Alpha")
+  autor_uid  String?  @db.VarChar(128)
+  termos_aceitos_em DateTime?
   pais       String   @default("BR") @db.VarChar(2)
 
   @@map("comentarios")
   @@index([status, criado_em])
+  @@index([autor_uid])
 }
 
 model AcessoLog {

@@ -16,4 +16,9 @@ Aplicação do videoclipe interativo da Alpha Scuderia.
 4. Execute `npm run prisma:generate`, aplique uma migração MySQL e rode `npm run dev`.
 5. Em outro terminal, rode `npm run dev --prefix frontend`.
 
+## Privacidade e retenção
+
+- Métricas de acesso e login só são ativados após o aceite de termos e cookies no site.
+- Os acessos são retidos por 90 dias e removidos na inicialização da API e a cada 24 horas. Ajuste o período, se necessário, com `ACCESS_LOG_RETENTION_DAYS`.
+
 Não publique arquivos `.env` nem credenciais de conta de serviço Firebase.

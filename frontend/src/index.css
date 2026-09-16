@@ -57,6 +57,10 @@ img{max-width:100%;display:block}
 footer{padding:24px 16px;display:flex;flex-direction:column;align-items:flex-start;gap:12px;color:#e6b3eb;font-size:13px}
 footer p{flex:1;margin:0}
 footer a{color:#fff}
+.footer-link{border:0;padding:0;background:transparent;color:#fff;text-decoration:underline;cursor:pointer}
+.consent-banner{position:fixed;z-index:20;right:16px;bottom:16px;left:16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:16px;border:1px solid #ffffff42;border-radius:12px;background:#240333;color:#fff;box-shadow:0 10px 30px #0008}
+.consent-banner p{flex:1;min-width:220px;margin:0;font-size:14px}.consent-banner button,.terms-close{border:0;border-radius:8px;padding:10px 13px;background:#fff;color:#31003f;font-weight:700;cursor:pointer}.consent-banner button:last-child{background:#ff00e3}
+.terms-dialog{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:20px;background:#000a;color:#31003f}.terms-dialog>div{position:relative;overflow:auto;max-width:720px;max-height:90vh;padding:30px;border-radius:14px;background:#fff}.terms-content h2{margin-top:0}.terms-content h3{margin:24px 0 6px}.terms-content p{line-height:1.5}.terms-close{position:absolute;top:12px;right:12px;background:#eee0f4}
 
 @keyframes pop{0%,100%{opacity:0;transform:translateY(15px)}12%,82%{opacity:1;transform:none}}
 

@@ -9,12 +9,18 @@ services:
       - .env
     environment:
       PORT: 3000
+      GOOGLE_APPLICATION_CREDENTIALS: /app/${FIREBASE_CREDENTIALS_FILE:?Set FIREBASE_CREDENTIALS_FILE in .env to the Firebase service account JSON filename}
     ports:
       - "3000:3000"
-    # Uncomment if firebase-admin needs an explicit service account instead of
-    # relying on Application Default Credentials (see .env.example).
-    # volumes:
-    #   - ./firebase-service-account.json:/app/firebase-service-account.json:ro
+    # Lets the container resolve host.docker.internal to the server's own host
+    # network, needed to reach a MySQL installed directly on the server (not in
+    # Docker) — point DATABASE_URL in .env at host.docker.internal.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # Firebase service account JSON — set FIREBASE_CREDENTIALS_FILE in .env to
+    # the file's name (kept alongside docker-compose.yml).
+    volumes:
+      - ./${FIREBASE_CREDENTIALS_FILE:?Set FIREBASE_CREDENTIALS_FILE in .env to the Firebase service account JSON filename}:/app/${FIREBASE_CREDENTIALS_FILE}:ro
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s

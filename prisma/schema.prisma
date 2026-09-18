@@ -22,6 +22,15 @@ model Comentario {
   @@index([autor_uid])
 }
 
+model AdminUser {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique @db.VarChar(190)
+  senha_hash String   @db.VarChar(255)
+  criado_em  DateTime @default(now())
+
+  @@map("admin_users")
+}
+
 model AcessoLog {
   id               Int      @id @default(autoincrement())
   data_hora_acesso DateTime @default(now())

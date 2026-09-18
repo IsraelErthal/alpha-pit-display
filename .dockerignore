@@ -7,7 +7,6 @@ npm-debug.log
 !.env.example
 docs
 frontend
-scripts
 README.md
 .agents
 .claude

@@ -4,7 +4,6 @@ import { Terms } from './Terms';
 
 type Comment = { id: number; mensagem: string; criadoEm: string; autor: string; pais?: string };
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-const videoId = import.meta.env.VITE_YOUTUBE_VIDEO_ID || 'dQw4w9WgXcQ';
 const consentKey = 'alpha-pit-cookie-consent';
 
 // URL da bandeira em imagem (funciona em qualquer SO/navegador, ao contrário do emoji)
@@ -170,7 +169,7 @@ export default function App() {
     <header className="topbar"><img src="/assets/Logo Alpha Com Contorno (1).png" alt="Alpha Scuderia" /><div><p>WE ARE ONE</p><span>ALPHA SCUDERIA · STEM RACING</span></div></header>
     <section className="hero">
       <div className="hero-copy"><span className="eyebrow">INTERACTIVE MUSIC VIDEO</span><h1>One team.<br /><em>One voice.</em></h1><p>Watch the video and leave your message for Alpha Scuderia.</p><img className="hero-mascot" src="/assets/alpha uniforme 3k v2.png" alt="Alphie, Alpha Scuderia's mascot" /></div>
-      <div className="player-wrap"><div className="player"><iframe title="WE ARE ONE - Alpha Scuderia" src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=1&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&playsinline=1`} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+      <div className="player-wrap"><div className="player"><iframe title="YouTube video player" src="https://www.youtube.com/embed/PYebElFHRLI?si=nL9SEYRs5eWjM_vB&controls=0" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen />
         {activeComment && (
           <aside className="bubble">
             <span className="bubble-flag">

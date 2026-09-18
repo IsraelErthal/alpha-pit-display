@@ -16,6 +16,7 @@ COPY package.json ./
 COPY prisma.config.ts ./
 COPY prisma ./prisma
 COPY src ./src
+COPY scripts ./scripts
 COPY docker-entrypoint.sh ./
 
 RUN npx prisma generate \

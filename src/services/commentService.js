@@ -2,9 +2,9 @@ const { z } = require('zod');
 
 const messageSchema = z.object({ mensagem: z.string().trim().min(1).max(280) });
 const createSchema = z.object({
+  autor: z.string().trim().min(1).max(60),
   mensagem: z.string().trim().min(1).max(280),
   pais: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/, 'País inválido'),
-  aceitouTermos: z.literal(true),
 });
 const accessSchema = z.object({ sessaoId: z.string().trim().min(12).max(64), aceitouTermos: z.literal(true) });
 
@@ -21,12 +21,6 @@ function dateFilter(start, end) {
   return { gte: startAt, lt: endAt };
 }
 
-function verifiedAuthor(user) {
-  const name = user.name?.trim();
-  if (name) return name.slice(0, 60);
-  return user.email.slice(0, 60);
-}
-
 function createCommentService(prisma) {
   return {
     async listPublic() {
@@ -35,10 +29,10 @@ function createCommentService(prisma) {
       });
       return comments.map(publicComment);
     },
-    async create(input, user) {
-      const { mensagem, pais } = createSchema.parse(input);
+    async create(input) {
+      const { autor, mensagem, pais } = createSchema.parse(input);
       const comment = await prisma.comentario.create({
-        data: { mensagem, status: 'pendente', autor: verifiedAuthor(user), autor_uid: user.uid, pais, termos_aceitos_em: new Date() },
+        data: { mensagem, status: 'pendente', autor, pais },
       });
       return publicComment(comment);
     },

@@ -6,7 +6,7 @@ const { Server } = require('socket.io');
 const { PrismaClient } = require('@prisma/client');
 const { PrismaMariaDb } = require('@prisma/adapter-mariadb');
 const { port, clientOrigin, accessLogRetentionDays } = require('./config/env');
-const { authenticate, requireAdmin, requireVerifiedIdentity } = require('./middleware/auth');
+const { authenticate, requireAdmin } = require('./middleware/auth');
 const { rateLimit } = require('./middleware/rateLimit');
 const { createCommentService } = require('./services/commentService');
 
@@ -35,8 +35,8 @@ app.use((req, res, next) => (req.path.startsWith('/api/admin/') ? next() : publi
 app.get('/health', (_req, res) => res.json({ ok: true }));
 app.get('/api/comments', async (_req, res, next) => { try { res.json(await comments.listPublic()); } catch (error) { next(error); } });
 app.post('/api/accesses', rateLimit({ windowMs: 60_000, max: 20 }), async (req, res, next) => { try { await comments.logAccess(req.body); res.status(201).end(); } catch (error) { next(error); } });
-app.post('/api/comments', authenticate, requireVerifiedIdentity, rateLimit({ windowMs: 60_000, max: 8 }), async (req, res, next) => {
-  try { await comments.create(req.body, req.user); res.status(202).json({ message: 'Comentário enviado para moderação.' }); } catch (error) { next(error); }
+app.post('/api/comments', rateLimit({ windowMs: 60_000, max: 8 }), async (req, res, next) => {
+  try { await comments.create(req.body); res.status(202).json({ message: 'Comentário enviado para moderação.' }); } catch (error) { next(error); }
 });
 app.get('/api/admin/dashboard', authenticate, requireAdmin, async (req, res, next) => { try { res.json(await comments.dashboard(String(req.query.start || ''), String(req.query.end || ''))); } catch (error) { next(error); } });
 app.get('/api/admin/comments', authenticate, requireAdmin, async (req, res, next) => { try { res.json(await comments.listAdmin(String(req.query.q || ''), String(req.query.start || ''), String(req.query.end || ''), String(req.query.status || 'todos'))); } catch (error) { next(error); } });

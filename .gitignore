@@ -8,3 +8,4 @@ firebase-service-account.json
 
 # Local-only docs (audit reports, generated artifacts)
 docs/
+frontend/dist/

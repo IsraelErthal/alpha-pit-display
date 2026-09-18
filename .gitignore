@@ -5,4 +5,7 @@ node_modules
 firebase-service-account.json
 
 /generated/prisma
+
+# Local-only docs (audit reports, generated artifacts)
+docs/
 frontend/dist/

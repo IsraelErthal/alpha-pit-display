@@ -1,7 +1,5 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { GoogleAuthProvider, User, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { io } from 'socket.io-client';
-import { getAuthClient } from './firebase';
 import { Terms } from './Terms';
 
 type Comment = { id: number; mensagem: string; criadoEm: string; autor: string; pais?: string };
@@ -114,7 +112,7 @@ function CountryField({ value, code, onChange }: { value: string; code: string; 
 
 export default function App() {
   const [comments, setComments] = useState<Comment[]>([]);
-  const [user, setUser] = useState<User | null>(null);
+  const [author, setAuthor] = useState('');
   const [countryQuery, setCountryQuery] = useState('');
   const [countryCode, setCountryCode] = useState('');
   const [message, setMessage] = useState('');
@@ -135,11 +133,6 @@ export default function App() {
   }, []);
   useEffect(() => {
     if (!hasConsent) return;
-    const auth = getAuthClient();
-    return auth ? onAuthStateChanged(auth, setUser) : undefined;
-  }, [hasConsent]);
-  useEffect(() => {
-    if (!hasConsent) return;
     const storageKey = 'alpha-pit-session-id';
     let sessaoId = localStorage.getItem(storageKey);
     if (!sessaoId) { sessaoId = crypto.randomUUID(); localStorage.setItem(storageKey, sessaoId); }
@@ -152,18 +145,18 @@ export default function App() {
   }, [comments.length]);
   const activeComment = useMemo(() => comments[current % Math.max(comments.length, 1)], [comments, current]);
 
-  const canSubmit = Boolean(user) && countryCode.length > 0 && message.trim().length > 0;
+  const canSubmit = author.trim().length > 0 && countryCode.length > 0 && message.trim().length > 0;
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (!canSubmit || !user) return;
-    const token = await user.getIdToken();
+    if (!canSubmit) return;
     const response = await fetch(`${apiUrl}/api/comments`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ mensagem: message, pais: countryCode, aceitouTermos: true }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ autor: author, mensagem: message, pais: countryCode }),
     });
-    if (!response.ok) return setNotice('Could not post your comment. Confirm your email and try again.');
+    if (!response.ok) return setNotice('Could not post your comment. Please try again.');
+    setAuthor('');
     setMessage('');
     setNotice('Comment sent for moderation. Thanks for cheering with Alpha!');
   }
@@ -171,11 +164,6 @@ export default function App() {
   function acceptCookies() {
     localStorage.setItem(consentKey, 'accepted');
     setHasConsent(true);
-  }
-
-  async function signIn() {
-    const auth = getAuthClient();
-    if (auth) await signInWithPopup(auth, new GoogleAuthProvider());
   }
 
   return <main>
@@ -201,7 +189,8 @@ export default function App() {
       <form onSubmit={submit}>
         <fieldset className="about-you">
           <legend>Tell us about you</legend>
-          {user ? <><p>Posting as <strong>{user.displayName || user.email}</strong></p><button type="button" onClick={() => { const auth = getAuthClient(); if (auth) void signOut(auth); }}>Sign out</button></> : <button type="button" onClick={() => void signIn()} disabled={!hasConsent}>Sign in with Google to comment</button>}
+          <label htmlFor="author">Your name</label>
+          <input id="author" value={author} onChange={e => setAuthor(e.target.value)} maxLength={60} placeholder="Enter your name" required />
           <label htmlFor="country">Your country</label>
           <CountryField
             value={countryQuery}
@@ -215,7 +204,7 @@ export default function App() {
       {notice && <p role="status" className="notice">{notice}</p>}
     </div><img className="trophy" src="/assets/trofeu-alphie.png" alt="Alphie with trophy" /></section>
     <footer><img src="/assets/Logo Alpha Com Contorno (1).png" alt="Alpha Scuderia" /><p>© 2026 Alpha Scuderia · STEM Racing</p><button className="footer-link" type="button" onClick={() => setShowTerms(true)}>Terms and cookies</button><a href="/admin">Admin area</a></footer>
-    {hasConsent === false && <section className="consent-banner" role="dialog" aria-label="Cookies"><p>Usamos cookies opcionais somente para métricas e login após o seu aceite.</p><button type="button" onClick={() => setShowTerms(true)}>Read terms</button><button type="button" onClick={acceptCookies}>Accept cookies</button></section>}
+    {hasConsent === false && <section className="consent-banner" role="dialog" aria-label="Cookies"><p>Usamos cookies opcionais somente para métricas após o seu aceite.</p><button type="button" onClick={() => setShowTerms(true)}>Read terms</button><button type="button" onClick={acceptCookies}>Accept cookies</button></section>}
     {showTerms && <section className="terms-dialog" role="dialog" aria-modal="true" aria-label="Terms and cookies"><div><button className="terms-close" type="button" onClick={() => setShowTerms(false)}>Close</button><Terms /></div></section>}
   </main>;
 }

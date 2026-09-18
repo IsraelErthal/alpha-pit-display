@@ -18,7 +18,7 @@ Aplicação do videoclipe interativo da Alpha Scuderia.
 
 ## Privacidade e retenção
 
-- Métricas de acesso e login só são ativados após o aceite de termos e cookies no site.
+- Métricas de acesso só são ativadas após o aceite de termos e cookies no site. O envio de comentários é público e requer somente nome, país e mensagem; o login Firebase permanece restrito à área administrativa.
 - Os acessos são retidos por 90 dias e removidos na inicialização da API e a cada 24 horas. Ajuste o período, se necessário, com `ACCESS_LOG_RETENTION_DAYS`.
 
 Não publique arquivos `.env` nem credenciais de conta de serviço Firebase.

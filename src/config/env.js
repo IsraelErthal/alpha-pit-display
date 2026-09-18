@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const required = ['DATABASE_URL'];
+const required = ['DATABASE_URL', 'JWT_SECRET'];
 const retentionDays = Number(process.env.ACCESS_LOG_RETENTION_DAYS || 90);
 
 function requireEnv(name) {
@@ -14,7 +14,7 @@ module.exports = {
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
   accessLogRetentionDays: Number.isInteger(retentionDays) && retentionDays > 0 ? retentionDays : 90,
   isProduction: process.env.NODE_ENV === 'production',
-  firebaseProjectId: process.env.FIREBASE_PROJECT_ID,
+  jwtSecret: requireEnv('JWT_SECRET'),
   requireEnv,
   required,
 };

@@ -72,6 +72,9 @@ footer a{color:#fff}
 .admin-login-box p{color:#e6b3eb;margin:0 0 22px}
 .admin-login-box button{border:0;border-radius:999px;background:#fff;color:#23022f;font-weight:700;padding:14px 28px;cursor:pointer;font-size:15px;min-height:44px}
 .admin-login-box .admin-notice{margin-top:18px;color:#4a004b}
+.admin-login-box form{display:flex;flex-direction:column;gap:12px;width:100%;text-align:left;margin-top:8px}
+.admin-login-box form label{font:11px 'DM Mono',monospace;color:#e6b3eb}
+.admin-login-box form input{width:100%;border:1px solid #ffffff35;border-radius:7px;padding:12px 10px;background:#12001b;color:#fff;font:16px Outfit,sans-serif;min-height:44px;margin-top:4px}
 
 /* ===== Admin: dashboard ===== */
 .admin-page{min-height:100vh;background:linear-gradient(135deg,#16021f,#3e0755);color:#fff}

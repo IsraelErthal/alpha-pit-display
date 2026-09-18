@@ -9,6 +9,7 @@ const { port, clientOrigin, accessLogRetentionDays } = require('./config/env');
 const { authenticate, requireAdmin } = require('./middleware/auth');
 const { rateLimit } = require('./middleware/rateLimit');
 const { createCommentService } = require('./services/commentService');
+const { createAdminAuthService } = require('./services/adminAuthService');
 
 const databaseUrl = new URL(process.env.DATABASE_URL);
 const prisma = new PrismaClient({
@@ -23,9 +24,11 @@ const prisma = new PrismaClient({
   errorFormat: 'minimal',
 });
 const comments = createCommentService(prisma);
+const adminAuth = createAdminAuthService(prisma);
 const app = express();
 let io;
 const publicRateLimit = rateLimit({ windowMs: 60_000, max: 60 });
+const loginRateLimit = rateLimit({ windowMs: 15 * 60_000, max: 5 });
 app.set('trust proxy', 1);
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({ origin: clientOrigin.split(','), methods: ['GET', 'POST', 'PATCH'] }));
@@ -38,13 +41,14 @@ app.post('/api/accesses', rateLimit({ windowMs: 60_000, max: 20 }), async (req, 
 app.post('/api/comments', rateLimit({ windowMs: 60_000, max: 8 }), async (req, res, next) => {
   try { await comments.create(req.body); res.status(202).json({ message: 'Comentário enviado para moderação.' }); } catch (error) { next(error); }
 });
+app.post('/api/admin/login', loginRateLimit, async (req, res, next) => { try { res.json(await adminAuth.login(req.body)); } catch (error) { next(error); } });
 app.get('/api/admin/dashboard', authenticate, requireAdmin, async (req, res, next) => { try { res.json(await comments.dashboard(String(req.query.start || ''), String(req.query.end || ''))); } catch (error) { next(error); } });
 app.get('/api/admin/comments', authenticate, requireAdmin, async (req, res, next) => { try { res.json(await comments.listAdmin(String(req.query.q || ''), String(req.query.start || ''), String(req.query.end || ''), String(req.query.status || 'todos'))); } catch (error) { next(error); } });
 app.patch('/api/admin/comments/:id/hide', authenticate, requireAdmin, async (req, res, next) => { try { const hidden = await comments.hide(req.params.id); req.io.emit('comment:hidden', { id: hidden.id }); res.status(204).end(); } catch (error) { next(error); } });
 app.patch('/api/admin/comments/:id/restore', authenticate, requireAdmin, async (req, res, next) => { try { const restored = await comments.restore(req.params.id); req.io.emit('comment:created', { id: restored.id, mensagem: restored.mensagem, criadoEm: restored.criado_em, autor: restored.autor, pais: restored.pais }); res.json(restored); } catch (error) { next(error); } });
 app.patch('/api/admin/comments/:id', authenticate, requireAdmin, async (req, res, next) => { try { res.json(await comments.update(req.params.id, req.body)); } catch (error) { next(error); } });
 app.delete('/api/admin/comments/:id', authenticate, requireAdmin, async (req, res, next) => { try { const removed = await comments.remove(req.params.id); req.io.emit('comment:hidden', { id: removed.id }); res.status(204).end(); } catch (error) { next(error); } });
-app.use((error, _req, res, _next) => { if (error.name === 'ZodError') return res.status(400).json({ error: 'Dados inválidos ou consentimento ausente.' }); console.error(error); return res.status(500).json({ error: 'Erro interno.' }); });
+app.use((error, _req, res, _next) => { if (error.name === 'ZodError') return res.status(400).json({ error: 'Dados inválidos ou consentimento ausente.' }); if (error.status) return res.status(error.status).json({ error: error.message }); console.error(error); return res.status(500).json({ error: 'Erro interno.' }); });
 
 const server = http.createServer(app);
 io = new Server(server, { cors: { origin: clientOrigin.split(','), methods: ['GET', 'POST'] } });

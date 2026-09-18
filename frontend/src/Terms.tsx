@@ -3,9 +3,9 @@ export function Terms() {
     <h2>Termos de uso e cookies</h2>
     <p>Última atualização: 15 de setembro de 2026.</p>
     <h3>Uso do site</h3>
-    <p>Você pode assistir ao conteúdo sem aceitar cookies opcionais. Ao enviar um comentário, você concorda em não publicar conteúdo ilegal, ofensivo ou que viole direitos de terceiros. Comentários passam por moderação e podem ser removidos.</p>
+    <p>Você pode assistir ao conteúdo sem aceitar cookies opcionais. Ao enviar um comentário, você concorda em não publicar conteúdo ilegal, ofensivo ou que viole direitos de terceiros. Os comentários aparecem imediatamente no mural e podem ser removidos pela administração.</p>
     <h3>Dados e finalidade</h3>
-    <p>Após o aceite, registramos um identificador aleatório de sessão e o horário de acesso para métricas agregadas. Se você optar por comentar, usamos o nome e o país informados por você, além da sua mensagem, para atribuição, moderação e publicação após aprovação.</p>
+    <p>Após o aceite, registramos um identificador aleatório de sessão e o horário de acesso para métricas agregadas. Se você optar por comentar, usamos o nome e o país informados por você, além da sua mensagem, para atribuição, moderação e publicação no mural.</p>
     <h3>Cookies e Google Analytics</h3>
     <p>Cookies e recursos analíticos opcionais só são ativados após o seu aceite. O site não possui Google Analytics ativo neste momento; se ele for configurado, só coletará dados após esse consentimento. O identificador de sessão não é criado antes do aceite.</p>
     <h3>Retenção</h3>

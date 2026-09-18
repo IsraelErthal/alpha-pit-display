@@ -123,7 +123,7 @@ export default function App() {
   useEffect(() => {
     fetch(`${apiUrl}/api/comments`).then(r => r.ok ? r.json() : []).then(setComments).catch(() => setNotice('Could not load comments right now.'));
     const socket = io(apiUrl);
-    socket.on('comment:created', (comment: Comment) => setComments(items => [...items, comment]));
+    socket.on('comment:created', (comment: Comment) => setComments(items => items.some(item => item.id === comment.id) ? items : [...items, comment]));
     socket.on('comment:hidden', ({ id }: { id: number }) => setComments(items => items.filter(item => item.id !== id)));
     return () => { socket.disconnect(); };
   }, []);
@@ -155,9 +155,11 @@ export default function App() {
       body: JSON.stringify({ autor: author, mensagem: message, pais: countryCode }),
     });
     if (!response.ok) return setNotice('Could not post your comment. Please try again.');
+    const comment: Comment = await response.json();
+    setComments(items => items.some(item => item.id === comment.id) ? items : [...items, comment]);
     setAuthor('');
     setMessage('');
-    setNotice('Comment sent for moderation. Thanks for cheering with Alpha!');
+    setNotice('Comment added to the live queue. Thanks for cheering with Alpha!');
   }
 
   function acceptCookies() {

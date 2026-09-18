@@ -9,7 +9,7 @@ datasource db {
 model Comentario {
   id         Int      @id @default(autoincrement())
   mensagem   String   @db.Text
-  status     String   @default("pendente")
+  status     String   @default("aprovado")
   criado_em  DateTime @default(now())
   ocultado_em DateTime?
   autor      String   @default("Torcedor Alpha")

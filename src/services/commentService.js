@@ -32,7 +32,7 @@ function createCommentService(prisma) {
     async create(input) {
       const { autor, mensagem, pais } = createSchema.parse(input);
       const comment = await prisma.comentario.create({
-        data: { mensagem, status: 'pendente', autor, pais },
+        data: { mensagem, status: 'aprovado', autor, pais },
       });
       return publicComment(comment);
     },

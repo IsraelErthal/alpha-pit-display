@@ -39,7 +39,11 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 app.get('/api/comments', async (_req, res, next) => { try { res.json(await comments.listPublic()); } catch (error) { next(error); } });
 app.post('/api/accesses', rateLimit({ windowMs: 60_000, max: 20 }), async (req, res, next) => { try { await comments.logAccess(req.body); res.status(201).end(); } catch (error) { next(error); } });
 app.post('/api/comments', rateLimit({ windowMs: 60_000, max: 8 }), async (req, res, next) => {
-  try { await comments.create(req.body); res.status(202).json({ message: 'Comentário enviado para moderação.' }); } catch (error) { next(error); }
+  try {
+    const comment = await comments.create(req.body);
+    req.io.emit('comment:created', comment);
+    res.status(201).json(comment);
+  } catch (error) { next(error); }
 });
 app.post('/api/admin/login', loginRateLimit, async (req, res, next) => { try { res.json(await adminAuth.login(req.body)); } catch (error) { next(error); } });
 app.get('/api/admin/dashboard', authenticate, requireAdmin, async (req, res, next) => { try { res.json(await comments.dashboard(String(req.query.start || ''), String(req.query.end || ''))); } catch (error) { next(error); } });

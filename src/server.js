@@ -19,7 +19,9 @@ const prisma = new PrismaClient({
     user: decodeURIComponent(databaseUrl.username),
     password: decodeURIComponent(databaseUrl.password),
     database: databaseUrl.pathname.slice(1),
-    connectionLimit: 5,
+    connectionLimit: 10,
+    connectTimeout: 10_000,
+    acquireTimeout: 10_000,
   }),
   errorFormat: 'minimal',
 });

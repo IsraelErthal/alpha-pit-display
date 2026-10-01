@@ -19,6 +19,7 @@ const prisma = new PrismaClient({
     password: decodeURIComponent(databaseUrl.password),
     database: databaseUrl.pathname.slice(1),
     connectionLimit: 1,
+    allowPublicKeyRetrieval: true,
   }),
 });
 

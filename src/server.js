@@ -20,8 +20,15 @@ const prisma = new PrismaClient({
     password: decodeURIComponent(databaseUrl.password),
     database: databaseUrl.pathname.slice(1),
     connectionLimit: 10,
+    // Keep only a few idle connections and recycle them well before MySQL's
+    // wait_timeout, so the pool never holds dead sockets.
+    minimumIdle: 2,
+    idleTimeout: 60,
     connectTimeout: 10_000,
     acquireTimeout: 10_000,
+    // MySQL 8 (caching_sha2_password) needs this for full auth over non-TLS;
+    // without it each handshake fails and MySQL eventually blocks the host.
+    allowPublicKeyRetrieval: true,
   }),
   errorFormat: 'minimal',
 });
@@ -70,3 +77,10 @@ async function removeExpiredAccesses() {
 void removeExpiredAccesses();
 setInterval(removeExpiredAccesses, 24 * 60 * 60 * 1_000).unref();
 server.listen(port, () => console.log(`Alpha API em http://localhost:${port}`));
+async function shutdown() {
+  io.close(); // also closes the HTTP server
+  await prisma.$disconnect();
+  process.exit(0);
+}
+process.once('SIGTERM', shutdown);
+process.once('SIGINT', shutdown);
